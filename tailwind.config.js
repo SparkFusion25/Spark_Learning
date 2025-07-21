@@ -7,58 +7,70 @@ module.exports = {
     extend: {
       colors: {
         spark: {
-          purple: '#667eea',
-          pink: '#f093fb',
-          blue: '#4facfe',
-          green: '#43e97b',
-          orange: '#ff9a56',
-          yellow: '#feca57'
-        }
+          50: '#f8f5ff',
+          100: '#f0e8ff',
+          200: '#e4d4ff',
+          300: '#d1b3ff',
+          400: '#b885ff',
+          500: '#9c5dff',
+          600: '#8b3dff',
+          700: '#7c22ff',
+          800: '#6a0fff',
+          900: '#5b00d6',
+          950: '#3d0099',
+        },
       },
       fontFamily: {
-        'kid': ['Comic Neue', 'cursive'],
-        'parent': ['Inter', 'sans-serif'],
-        'display': ['Fredoka One', 'cursive']
+        'kid': ['Fredoka One', 'cursive'],
+        'parent': ['Poppins', 'sans-serif'],
+        'display': ['Nunito', 'sans-serif'],
       },
       borderRadius: {
         'kid': '24px',
         'parent': '12px',
-        'xl': '1.5rem',
-        '2xl': '2rem',
-        '3xl': '3rem'
+        '4xl': '2rem',
       },
       animation: {
-        'bounce-slow': 'bounce 2s infinite',
-        'pulse-slow': 'pulse 3s infinite',
-        'float': 'float 3s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite',
+        'sparkle': 'sparkle 1.5s ease-in-out infinite',
         'wiggle': 'wiggle 1s ease-in-out infinite',
-        'sparkle': 'sparkle 2s linear infinite'
       },
       keyframes: {
         float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' }
+          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+          '33%': { transform: 'translateY(-10px) rotate(1deg)' },
+          '66%': { transform: 'translateY(5px) rotate(-1deg)' },
         },
-        wiggle: {
-          '0%, 100%': { transform: 'rotate(-3deg)' },
-          '50%': { transform: 'rotate(3deg)' }
+        'bounce-gentle': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
+        glow: {
+          '0%, 100%': { boxShadow: '0 0 5px rgba(139, 95, 191, 0.5)' },
+          '50%': { boxShadow: '0 0 20px rgba(139, 95, 191, 0.8)' },
         },
         sparkle: {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.5', transform: 'scale(1.2)' }
-        }
+          '50%': { opacity: '0.5', transform: 'scale(1.2)' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(1deg)' },
+          '75%': { transform: 'rotate(-1deg)' },
+        },
       },
       boxShadow: {
-        'kid': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        'magical': '0 0 20px rgba(103, 126, 234, 0.3)',
-        'glow': '0 0 30px rgba(240, 147, 251, 0.4)'
+        'magical': '0 10px 30px rgba(139, 95, 191, 0.3)',
+        'float': '0 5px 15px rgba(240, 98, 146, 0.2)',
+        'glow': '0 0 20px rgba(255, 213, 79, 0.4)',
       },
       backgroundImage: {
-        'kid-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'parent-gradient': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'success-gradient': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'warning-gradient': 'linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)'
-      }
+        'gradient-magical': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'gradient-kid': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'gradient-parent': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      },
     },
   },
   plugins: [],

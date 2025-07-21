@@ -1,23 +1,69 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLearning } from '../../context/LearningContext';
-import FloatingShapes from '../shared/FloatingShapes';
 
 const WorldSelect = () => {
   const navigate = useNavigate();
-  const { LEARNING_WORLDS, setCurrentWorld, isWorldUnlocked } = useLearning();
+
+  // Mock learning worlds data
+  const learningWorlds = [
+    {
+      id: 'math',
+      name: 'Number Castle',
+      emoji: '🏰',
+      gradient: 'from-purple-400 via-purple-500 to-purple-600',
+      description: 'Solve puzzles and build with numbers!',
+      unlocked: true
+    },
+    {
+      id: 'reading',
+      name: 'Story Forest',
+      emoji: '🌳',
+      gradient: 'from-green-400 via-emerald-500 to-green-600',
+      description: 'Adventure through magical tales',
+      unlocked: true
+    },
+    {
+      id: 'science',
+      name: 'Wonder Lab',
+      emoji: '🔬',
+      gradient: 'from-blue-400 via-cyan-500 to-blue-600',
+      description: 'Discover amazing experiments',
+      unlocked: true
+    },
+    {
+      id: 'art',
+      name: 'Rainbow Studio',
+      emoji: '🎨',
+      gradient: 'from-pink-400 via-rose-500 to-pink-600',
+      description: 'Create colorful masterpieces',
+      unlocked: false
+    },
+    {
+      id: 'music',
+      name: 'Melody Mountain',
+      emoji: '🎵',
+      gradient: 'from-yellow-400 via-orange-500 to-yellow-600',
+      description: 'Make music and find rhythm',
+      unlocked: false
+    },
+    {
+      id: 'social',
+      name: 'Friendship Town',
+      emoji: '🏘️',
+      gradient: 'from-indigo-400 via-blue-500 to-indigo-600',
+      description: 'Learn about people and places',
+      unlocked: false
+    }
+  ];
 
   const handleWorldSelect = (world) => {
-    if (isWorldUnlocked(world)) {
-      setCurrentWorld(world);
+    if (world.unlocked) {
       navigate(`/lessons/${world.id}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 relative overflow-hidden kid-interface">
-      <FloatingShapes />
-      
+    <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 relative overflow-hidden">
       <div className="relative z-10 max-w-6xl mx-auto pt-8 px-4">
         <div className="text-center mb-10">
           <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
@@ -29,12 +75,12 @@ const WorldSelect = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {LEARNING_WORLDS.map(world => (
+          {learningWorlds.map(world => (
             <div 
               key={world.id}
               onClick={() => handleWorldSelect(world)}
-              className={`kid-card p-6 shadow-magical hover:scale-105 transition-all duration-500 cursor-pointer border-4 border-transparent hover:border-yellow-400 group relative overflow-hidden ${
-                !isWorldUnlocked(world) ? 'opacity-50 cursor-not-allowed' : ''
+              className={`bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 hover:scale-105 transition-all duration-500 cursor-pointer border-4 border-transparent hover:border-yellow-400 group relative overflow-hidden ${
+                !world.unlocked ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               <div className="text-center">
@@ -43,7 +89,7 @@ const WorldSelect = () => {
                 <p className="text-gray-600 mb-4">{world.description}</p>
                 
                 <div className={`bg-gradient-to-r ${world.gradient} text-white px-4 py-2 rounded-full text-sm font-bold`}>
-                  {isWorldUnlocked(world) ? 'Start Learning!' : `Unlock at Level ${world.unlockLevel}`}
+                  {world.unlocked ? 'Start Learning!' : 'Coming Soon!'}
                 </div>
               </div>
             </div>
