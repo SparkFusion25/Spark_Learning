@@ -424,8 +424,8 @@ const WordBuilderGame = ({ theme, onGameEnd, selectedAvatar }) => {
     setLetters(prev => prev.map(l => ({ ...l, isSelected: false })));
   };
 
-  // Hint system
-  const useHint = () => {
+     // Hint system
+   const activateHint = () => {
     if (hintsUsed >= 3) return;
     
     const unFoundWords = targetWords.filter(word => !foundWords.includes(word));
@@ -542,7 +542,7 @@ const WordBuilderGame = ({ theme, onGameEnd, selectedAvatar }) => {
                 🗑️ Clear
               </motion.button>
               <motion.button
-                onClick={useHint}
+                                 onClick={activateHint}
                 disabled={hintsUsed >= 3}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
                 whileHover={{ scale: hintsUsed < 3 ? 1.05 : 1 }}
@@ -2224,8 +2224,8 @@ const FamilyGamesHub = () => {
         }, 500);
       };
 
-      // Power-up usage
-      const usePowerUp = (type) => {
+             // Power-up usage
+       const activatePowerUp = (type) => {
         if (powerUps[type] <= 0 || activePowerUp) return;
         
         setPowerUps(prev => ({ ...prev, [type]: prev[type] - 1 }));
@@ -2398,7 +2398,7 @@ const FamilyGamesHub = () => {
                   {Object.entries(powerUps).map(([type, count]) => (
                     <motion.button
                       key={type}
-                      onClick={() => usePowerUp(type)}
+                      onClick={() => activatePowerUp(type)}
                       disabled={count <= 0 || activePowerUp}
                       className={`w-full p-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-between ${
                         activePowerUp === type
