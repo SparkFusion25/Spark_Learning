@@ -8,7 +8,7 @@ import ChildSelect from './components/child/ChildSelect';
 import WorldSelect from './components/child/WorldSelect';
 import SparkLearnGames from './components/games/SparkLearnGames';
 import EnhancedParentDashboard from './components/dashboard/EnhancedParentDashboard';
-import FamilyGamesHub from './components/games/FamilyGamesHub';
+import FamilyGamesHub from './components/games/FamilyGamesHubFixed';
 import VoiceInteractiveGame from './components/games/VoiceInteractiveGame';
 import ChildProfileEditor from './components/child/ChildProfileEditor';
 import EnhancedLearningGames from './components/games/EnhancedLearningGames';
