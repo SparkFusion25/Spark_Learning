@@ -581,7 +581,7 @@ const SparkleCrushGame = ({ theme, onGameEnd, selectedAvatar }) => {
   };
 
   // Power-up usage
-  const usePowerUp = (type) => {
+  const activatePowerUp = (type) => {
     if (powerUps[type] <= 0) return;
     
     setPowerUps(prev => ({ ...prev, [type]: prev[type] - 1 }));
@@ -789,7 +789,7 @@ const SparkleCrushGame = ({ theme, onGameEnd, selectedAvatar }) => {
                 {Object.entries(powerUps).map(([type, count]) => (
                   <motion.button
                     key={type}
-                    onClick={() => usePowerUp(type)}
+                    onClick={() => activatePowerUp(type)}
                     disabled={count <= 0}
                     className={`w-full p-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-between ${
                       count > 0 

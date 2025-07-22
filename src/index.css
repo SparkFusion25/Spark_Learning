@@ -61,7 +61,7 @@ body {
 }
 
 .parent-button {
-  @apply transform transition-all duration-200 hover:scale-102;
+  @apply transform transition-all duration-200 hover:scale-105;
   @apply bg-gradient-to-r from-blue-600 to-indigo-600;
   @apply text-white font-semibold rounded-xl;
   @apply shadow-md hover:shadow-lg;
