@@ -9,6 +9,7 @@ import WorldSelect from './components/child/WorldSelect';
 import SparkLearnGames from './components/games/SparkLearnGames';
 import EnhancedParentDashboard from './components/dashboard/EnhancedParentDashboard';
 import FamilyGamesHub from './components/games/FamilyGamesHub';
+import VoiceInteractiveGame from './components/games/VoiceInteractiveGame';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/games" element={<SparkLearnGames />} />
           <Route path="/family-games" element={<FamilyGamesHub />} />
           <Route path="/lessons/:worldId" element={<SparkLearnGames />} />
+          <Route path="/voice-chat/:worldId" element={<VoiceInteractiveGame />} />
           <Route path="/parent" element={<EnhancedParentDashboard />} />
           <Route path="/admin" element={<div className="min-h-screen bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-3xl font-bold">⚙️ Admin Panel Coming Soon!</div>} />
           <Route path="*" element={<Navigate to="/" replace />} />

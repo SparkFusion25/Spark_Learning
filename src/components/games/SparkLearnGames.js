@@ -4,8 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Star, Heart, Trophy, Home, RotateCcw, Pause, Play, Volume2, VolumeX,
   Zap, Target, Clock, Gift, Sparkles, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  User, Settings, Palette, CheckCircle, XCircle, HelpCircle
+  User, Settings, Palette, CheckCircle, XCircle, HelpCircle, Mic
 } from 'lucide-react';
+import audioManager from '../../utils/audioManager';
 
 // Enhanced Educational Learning Worlds with Proper Game Definitions
 const LEARNING_WORLDS = {
@@ -48,15 +49,25 @@ const LEARNING_WORLDS = {
         type: 'letters',
         levels: 6
       },
-      {
-        id: 'shapes-castle',
-        title: '🏰 Build Ice Castles',
-        description: 'Use shapes to build magical ice castles!',
-        skill: 'Shapes & Geometry',
-        minAge: 5,
-        type: 'shapes',
-        levels: 4
-      }
+              {
+          id: 'shapes-castle',
+          title: '🏰 Build Ice Castles',
+          description: 'Use shapes to build magical ice castles!',
+          skill: 'Shapes & Geometry',
+          minAge: 5,
+          type: 'shapes',
+          levels: 4
+        },
+        {
+          id: 'voice-chat',
+          title: '🎤 Talk with Elsa',
+          description: 'Have a magical conversation with Elsa using your voice!',
+          skill: 'Voice Interaction',
+          minAge: 4,
+          type: 'voice',
+          levels: 5,
+          special: true
+        }
     ]
   },
   spiderman: {
@@ -98,15 +109,25 @@ const LEARNING_WORLDS = {
         type: 'vocabulary',
         levels: 5
       },
-      {
-        id: 'city-colors',
-        title: '🌆 City Colors',
-        description: 'Learn colors while exploring the city!',
-        skill: 'Color Recognition',
-        minAge: 4,
-        type: 'colors',
-        levels: 3
-      }
+              {
+          id: 'city-colors',
+          title: '🌆 City Colors',
+          description: 'Learn colors while exploring the city!',
+          skill: 'Color Recognition',
+          minAge: 4,
+          type: 'colors',
+          levels: 3
+        },
+        {
+          id: 'voice-chat',
+          title: '🎤 Chat with Spider-Man',
+          description: 'Have a heroic conversation with your friendly neighborhood Spider-Man!',
+          skill: 'Voice Interaction',
+          minAge: 4,
+          type: 'voice',
+          levels: 5,
+          special: true
+        }
     ]
   },
   moana: {
@@ -148,15 +169,25 @@ const LEARNING_WORLDS = {
         type: 'sorting',
         levels: 4
       },
-      {
-        id: 'ocean-sounds',
-        title: '🎵 Ocean Sounds',
-        description: 'Match sounds with ocean animals!',
-        skill: 'Audio Recognition',
-        minAge: 4,
-        type: 'sounds',
-        levels: 3
-      }
+              {
+          id: 'ocean-sounds',
+          title: '🎵 Ocean Sounds',
+          description: 'Match sounds with ocean animals!',
+          skill: 'Audio Recognition',
+          minAge: 4,
+          type: 'sounds',
+          levels: 3
+        },
+        {
+          id: 'voice-chat',
+          title: '🎤 Sail with Moana',
+          description: 'Join Moana on an ocean adventure through voice conversation!',
+          skill: 'Voice Interaction',
+          minAge: 4,
+          type: 'voice',
+          levels: 5,
+          special: true
+        }
     ]
   }
 };
@@ -202,9 +233,18 @@ const CountingGame = ({ game, theme, onComplete, selectedAvatar }) => {
     setUserCount(number);
     setAttempts(attempts + 1);
     
+    // Play click sound
+    audioManager.playSound('click');
+    
     if (number === targetNumber) {
-      setFeedback(`🎉 Correct! There are ${targetNumber} items!`);
+      const feedbackText = `🎉 Correct! There are ${targetNumber} items!`;
+      setFeedback(feedbackText);
       setScore(score + 10);
+      
+      // Play success sound and speak encouragement
+      audioManager.playSound('correct');
+      const characterResponse = audioManager.getCharacterPhrase(theme.characterName.toLowerCase(), 'correct');
+      audioManager.speak(characterResponse, theme.characterName.toLowerCase());
       
       setTimeout(() => {
         if (level < game.levels) {
@@ -215,12 +255,22 @@ const CountingGame = ({ game, theme, onComplete, selectedAvatar }) => {
         }
       }, 2000);
     } else {
-      setFeedback(`Try again! Count carefully. 🤔`);
+      const feedbackText = `Try again! Count carefully. 🤔`;
+      setFeedback(feedbackText);
+      
+      // Play wrong sound and speak encouragement
+      audioManager.playSound('wrong');
+      
       if (attempts >= 2) {
         setTimeout(() => {
-          setFeedback(`The answer is ${targetNumber}! Let's try another one. 😊`);
+          const hintText = `The answer is ${targetNumber}! Let's try another one. 😊`;
+          setFeedback(hintText);
+          audioManager.speak(hintText, theme.characterName.toLowerCase());
           setTimeout(generateNewQuestion, 2000);
         }, 1500);
+      } else {
+        const encouragement = audioManager.getCharacterPhrase(theme.characterName.toLowerCase(), 'incorrect');
+        audioManager.speak(encouragement, theme.characterName.toLowerCase());
       }
     }
   };
@@ -669,12 +719,24 @@ const SparkLearnGames = () => {
     gamesCompleted: 0,
     currentStreak: 0
   });
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
 
   const currentWorld = LEARNING_WORLDS[worldId] || LEARNING_WORLDS.frozen;
 
   const handleGameSelect = (game) => {
+    // Handle special voice interactive games
+    if (game.type === 'voice') {
+      navigate(`/voice-chat/${worldId}`);
+      return;
+    }
+    
     setSelectedGame(game);
     setGameState('playing');
+  };
+
+  const toggleAudio = () => {
+    setIsAudioEnabled(!isAudioEnabled);
+    audioManager.setEnabled(!isAudioEnabled);
   };
 
   const handleGameComplete = (result) => {
@@ -774,6 +836,22 @@ const SparkLearnGames = () => {
   return (
     <div className={`min-h-screen bg-gradient-to-br ${currentWorld.theme.background} p-4 relative overflow-hidden`}>
       
+      {/* Audio Controls */}
+      <motion.div 
+        className="fixed top-4 right-4 z-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <motion.button
+          onClick={toggleAudio}
+          className={`p-3 rounded-full ${isAudioEnabled ? 'bg-green-500' : 'bg-red-500'} text-white shadow-lg`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {isAudioEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+        </motion.button>
+      </motion.div>
+
       {/* Header */}
       <motion.div 
         className="text-center mb-12"
@@ -815,7 +893,11 @@ const SparkLearnGames = () => {
           {currentWorld.games.map((game, index) => (
             <motion.div
               key={game.id}
-              className="bg-white/30 backdrop-blur-lg rounded-3xl p-8 shadow-2xl cursor-pointer hover:shadow-3xl transition-all"
+              className={`backdrop-blur-lg rounded-3xl p-8 shadow-2xl cursor-pointer hover:shadow-3xl transition-all ${
+                game.special 
+                  ? 'bg-gradient-to-br from-purple-400/40 to-pink-400/40 border-2 border-purple-300' 
+                  : 'bg-white/30'
+              }`}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -823,10 +905,18 @@ const SparkLearnGames = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => handleGameSelect(game)}
             >
-              <div className="text-center">
-                <div className="text-6xl mb-4">{currentWorld.theme.character}</div>
-                <h3 className="text-3xl font-bold text-white mb-3">{game.title}</h3>
-                <p className="text-xl text-white/90 mb-4">{game.description}</p>
+                              <div className="text-center">
+                  <div className="text-6xl mb-4">
+                    {game.special ? <Mic className="w-16 h-16 mx-auto mb-2 text-purple-300" /> : null}
+                    {currentWorld.theme.character}
+                  </div>
+                  <h3 className="text-3xl font-bold text-white mb-3">{game.title}</h3>
+                  {game.special && (
+                    <div className="bg-purple-500/30 px-4 py-2 rounded-full mb-3 inline-block">
+                      <span className="text-white font-bold">🎤 Voice Interactive</span>
+                    </div>
+                  )}
+                  <p className="text-xl text-white/90 mb-4">{game.description}</p>
                 
                 <div className="flex justify-between items-center mb-6">
                   <div className="bg-white/20 px-4 py-2 rounded-xl">
