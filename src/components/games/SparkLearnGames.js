@@ -426,7 +426,7 @@ const SparkLearnGames = () => {
                   p-6 rounded-2xl transition-all duration-300 border-4
                   ${selectedTheme === themeOption.id
                     ? `border-blue-500 bg-gradient-to-br ${themeOption.colors.primary} text-white scale-105`
-                    : 'border-white/30 bg-white/20 hover:bg-white/30 hover:scale-102'
+                    : 'border-white/30 bg-white/20 hover:bg-white/30 hover:scale-105'
                   }
                 `}
                 whileHover={{ scale: selectedTheme === themeOption.id ? 1.05 : 1.02 }}
