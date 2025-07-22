@@ -120,7 +120,7 @@ const ChildSelect = () => {
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl mb-4">
                   <p className="text-sm font-semibold text-gray-600 mb-2">Today's Progress</p>
                   <div className="flex justify-between items-center text-sm">
                     <span className="flex items-center gap-1">
@@ -131,6 +131,16 @@ const ChildSelect = () => {
                     </span>
                   </div>
                 </div>
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/profile-editor');
+                  }}
+                  className="w-full bg-white/50 hover:bg-white/70 text-gray-700 py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  ✏️ Edit Profile
+                </button>
               </div>
             </div>
           ))}

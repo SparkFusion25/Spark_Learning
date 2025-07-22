@@ -10,6 +10,9 @@ import SparkLearnGames from './components/games/SparkLearnGames';
 import EnhancedParentDashboard from './components/dashboard/EnhancedParentDashboard';
 import FamilyGamesHub from './components/games/FamilyGamesHub';
 import VoiceInteractiveGame from './components/games/VoiceInteractiveGame';
+import ChildProfileEditor from './components/child/ChildProfileEditor';
+import EnhancedLearningGames from './components/games/EnhancedLearningGames';
+import LanguageLearningHub from './components/games/LanguageLearningHub';
 
 function App() {
   return (
@@ -23,6 +26,9 @@ function App() {
           <Route path="/family-games" element={<FamilyGamesHub />} />
           <Route path="/lessons/:worldId" element={<SparkLearnGames />} />
           <Route path="/voice-chat/:worldId" element={<VoiceInteractiveGame />} />
+          <Route path="/profile-editor" element={<ChildProfileEditor />} />
+          <Route path="/enhanced-learning/:worldId" element={<EnhancedLearningGames />} />
+          <Route path="/language-learning" element={<LanguageLearningHub />} />
           <Route path="/parent" element={<EnhancedParentDashboard />} />
           <Route path="/admin" element={<div className="min-h-screen bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-3xl font-bold">⚙️ Admin Panel Coming Soon!</div>} />
           <Route path="*" element={<Navigate to="/" replace />} />

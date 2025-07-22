@@ -105,13 +105,29 @@ const WorldSelect = () => {
             ← Back to Child Select
           </button>
 
-          {/* Family Games Button */}
-          <button
-            onClick={() => navigate('/family-games')}
-            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-          >
-            🎮 Family Games
-          </button>
+                {/* Family Games Button */}
+      <button
+        onClick={() => navigate('/family-games')}
+        className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+      >
+        🎮 Family Games
+      </button>
+
+      {/* Enhanced Learning Button */}
+      <button
+        onClick={() => navigate('/enhanced-learning/castle')}
+        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+      >
+        🏰 Better Learning
+      </button>
+
+      {/* Language Learning Button */}
+      <button
+        onClick={() => navigate('/language-learning')}
+        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+      >
+        🌍 Learn Languages
+      </button>
 
                                 {/* Current Child Info */}
                       <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
