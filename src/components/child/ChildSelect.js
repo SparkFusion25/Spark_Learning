@@ -4,29 +4,46 @@ import { useNavigate } from 'react-router-dom';
 const ChildSelect = () => {
   const navigate = useNavigate();
 
-  // Mock child data
+  // Mock child data - Updated with Emmy and Greyson
   const children = [
     {
-      id: 'child1',
-      name: 'Emma',
+      id: 'emmy',
+      name: 'Emmy',
       age: 6,
-      avatar: '👧',
+      avatar: '👧🏽',
       level: 12,
       sparkCoins: 450,
       streak: 8,
       completedLessons: 47,
-      totalTimeToday: 32
+      totalTimeToday: 32,
+      favoriteTheme: 'frozen',
+      achievements: ['First Steps', 'Word Master', 'Counting Champion']
     },
     {
-      id: 'child2',
-      name: 'Max',
+      id: 'greyson',
+      name: 'Greyson',
       age: 5,
-      avatar: '👦',
+      avatar: '👦🏻',
       level: 8,
       sparkCoins: 230,
       streak: 3,
       completedLessons: 31,
-      totalTimeToday: 18
+      totalTimeToday: 18,
+      favoriteTheme: 'spiderman',
+      achievements: ['Explorer', 'Pattern Pro']
+    },
+    {
+      id: 'jaxon',
+      name: 'Jaxon',
+      age: 7,
+      avatar: '👦🏾',
+      level: 15,
+      sparkCoins: 680,
+      streak: 12,
+      completedLessons: 63,
+      totalTimeToday: 45,
+      favoriteTheme: 'moana',
+      achievements: ['Math Wizard', 'Creative Builder', 'Speed Reader', 'Problem Solver']
     }
   ];
 

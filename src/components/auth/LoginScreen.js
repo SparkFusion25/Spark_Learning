@@ -140,23 +140,28 @@ const LoginScreen = () => {
 
           {/* User Type Selection */}
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
-            {/* Child Login */}
-            <motion.div
-              className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300"
-              whileHover={{ scale: 1.05, y: -10 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/child-select')}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1 }}
-            >
-              <div className="text-6xl mb-4">👧👦</div>
-              <h3 className="text-2xl font-bold text-purple-800 mb-3">I'm a Kid!</h3>
-              <p className="text-gray-600 mb-6">Start your magical learning adventure</p>
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-2xl font-bold">
-                Let's Play! 🚀
-              </div>
-            </motion.div>
+                                    {/* Child Login */}
+                        <motion.div
+                          className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300"
+                          whileHover={{ scale: 1.05, y: -10 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => navigate('/child-select')}
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.1 }}
+                        >
+                          <div className="text-6xl mb-4">
+                            <span className="mr-2">👧🏽</span>
+                            <span className="mr-2">👦🏻</span>
+                            <span className="mr-2">👧🏿</span>
+                            <span>👦🏾</span>
+                          </div>
+                          <h3 className="text-2xl font-bold text-purple-800 mb-3">I'm a Kid!</h3>
+                          <p className="text-gray-600 mb-6">Start your magical learning adventure with Emmy & Greyson</p>
+                          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-2xl font-bold">
+                            Let's Play! 🚀
+                          </div>
+                        </motion.div>
 
             {/* Parent Login */}
             <motion.div

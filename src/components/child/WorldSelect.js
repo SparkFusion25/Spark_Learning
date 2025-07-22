@@ -113,10 +113,10 @@ const WorldSelect = () => {
             🎮 Family Games
           </button>
 
-          {/* Current Child Info */}
-          <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
-            <span className="text-white font-bold">👧 Emma • Level 3 • 150 ⭐</span>
-          </div>
+                                {/* Current Child Info */}
+                      <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
+                        <span className="text-white font-bold">👧🏽 Emmy • Level 3 • 150 ⭐</span>
+                      </div>
         </div>
       </div>
     </div>
