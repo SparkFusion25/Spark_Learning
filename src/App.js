@@ -8,11 +8,12 @@ import ChildSelect from './components/child/ChildSelect';
 import WorldSelect from './components/child/WorldSelect';
 import SparkLearnGames from './components/games/SparkLearnGames';
 import EnhancedParentDashboard from './components/dashboard/EnhancedParentDashboard';
-import FamilyGamesHub from './components/games/FamilyGamesHubFixed';
+import FamilyGamesHub from './components/games/FamilyGamesHubComplete';
 import VoiceInteractiveGame from './components/games/VoiceInteractiveGame';
 import ChildProfileEditor from './components/child/ChildProfileEditor';
 import EnhancedLearningGames from './components/games/EnhancedLearningGames';
 import LanguageLearningHub from './components/games/LanguageLearningHub';
+import ABCMouseStyleGames from './components/games/ABCMouseStyleGames';
 
 function App() {
   return (
@@ -29,6 +30,10 @@ function App() {
           <Route path="/profile-editor" element={<ChildProfileEditor />} />
           <Route path="/enhanced-learning/:worldId" element={<EnhancedLearningGames />} />
           <Route path="/language-learning" element={<LanguageLearningHub />} />
+          <Route path="/abc-games" element={<ABCMouseStyleGames />} />
+          <Route path="/abc-games/:levelId" element={<ABCMouseStyleGames />} />
+          <Route path="/abc-games/:levelId/:subjectId" element={<ABCMouseStyleGames />} />
+          <Route path="/abc-games/:levelId/:subjectId/:gameId" element={<ABCMouseStyleGames />} />
           <Route path="/parent" element={<EnhancedParentDashboard />} />
           <Route path="/admin" element={<div className="min-h-screen bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-3xl font-bold">⚙️ Admin Panel Coming Soon!</div>} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -96,6 +96,67 @@ const WorldSelect = () => {
           ))}
         </div>
         
+        {/* Primary Learning Games - Top Priority */}
+        <div className="mb-12">
+          <h2 className="text-4xl font-bold text-white text-center mb-8">🌟 Primary Learning Adventures</h2>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {/* Better Learning - ABC Mouse Style */}
+            <motion.button
+              onClick={() => navigate('/abc-games')}
+              className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-8 rounded-3xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="text-6xl mb-4">🎓</div>
+              <h3 className="text-2xl font-bold mb-3">Better Learning</h3>
+              <p className="text-sm opacity-90">Age-based educational games</p>
+              <p className="text-xs opacity-80 mt-2">Preschool to 4th Grade</p>
+            </motion.button>
+
+            {/* Language Learning */}
+            <motion.button
+              onClick={() => navigate('/language-learning')}
+              className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white p-8 rounded-3xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="text-6xl mb-4">🌍</div>
+              <h3 className="text-2xl font-bold mb-3">Learn Languages</h3>
+              <p className="text-sm opacity-90">Interactive language learning</p>
+              <p className="text-xs opacity-80 mt-2">With voice recognition</p>
+            </motion.button>
+
+            {/* Family Games */}
+            <motion.button
+              onClick={() => navigate('/family-games')}
+              className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white p-8 rounded-3xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <div className="text-6xl mb-4">🎮</div>
+              <h3 className="text-2xl font-bold mb-3">Family Fun Games</h3>
+              <p className="text-sm opacity-90">Games for the whole family</p>
+              <p className="text-xs opacity-80 mt-2">All 5 games now complete!</p>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Secondary Learning - Original Adventure Worlds */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-white text-center mb-6">🏰 Adventure Learning (Needs Improvement)</h2>
+          <p className="text-lg text-white/80 text-center mb-8">These games are being redesigned for better learning!</p>
+        </div>
+        
         <div className="text-center flex flex-col sm:flex-row items-center justify-center gap-4">
           {/* Back Button */}
           <button
@@ -105,34 +166,10 @@ const WorldSelect = () => {
             ← Back to Child Select
           </button>
 
-                {/* Family Games Button */}
-      <button
-        onClick={() => navigate('/family-games')}
-        className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-      >
-        🎮 Family Games
-      </button>
-
-      {/* Enhanced Learning Button */}
-      <button
-        onClick={() => navigate('/enhanced-learning/castle')}
-        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-      >
-        🏰 Better Learning
-      </button>
-
-      {/* Language Learning Button */}
-      <button
-        onClick={() => navigate('/language-learning')}
-        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-      >
-        🌍 Learn Languages
-      </button>
-
-                                {/* Current Child Info */}
-                      <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
-                        <span className="text-white font-bold">👧🏽 Emmy • Level 3 • 150 ⭐</span>
-                      </div>
+          {/* Current Child Info */}
+          <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
+            <span className="text-white font-bold">👧🏽 Emmy • Level 3 • 150 ⭐</span>
+          </div>
         </div>
       </div>
     </div>

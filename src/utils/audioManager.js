@@ -38,6 +38,12 @@ class AudioManager {
     if (!this.voices.length) return null;
 
     const voicePreferences = {
+      'child': {
+        preferred: ['Google US English Female', 'Microsoft Zira', 'Samantha', 'Vicki'], 
+        pitch: 1.4, 
+        rate: 0.9,
+        lang: 'en-US'
+      },
       'elsa': { 
         preferred: ['Google UK English Female', 'Microsoft Zira', 'Karen'], 
         pitch: 1.2, 
