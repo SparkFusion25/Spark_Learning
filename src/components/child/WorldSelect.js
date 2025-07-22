@@ -96,13 +96,27 @@ const WorldSelect = () => {
           ))}
         </div>
         
-        <div className="text-center">
-          <button 
+        <div className="text-center flex flex-col sm:flex-row items-center justify-center gap-4">
+          {/* Back Button */}
+          <button
             onClick={() => navigate('/child-select')}
-            className="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full hover:bg-white/30 transition-all duration-300 font-semibold border border-white/30"
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
           >
-            ← Back to Profile
+            ← Back to Child Select
           </button>
+
+          {/* Family Games Button */}
+          <button
+            onClick={() => navigate('/family-games')}
+            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+          >
+            🎮 Family Games
+          </button>
+
+          {/* Current Child Info */}
+          <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
+            <span className="text-white font-bold">👧 Emma • Level 3 • 150 ⭐</span>
+          </div>
         </div>
       </div>
     </div>
