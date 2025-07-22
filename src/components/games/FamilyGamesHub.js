@@ -298,6 +298,423 @@ const AVATAR_SYSTEM = {
   }
 };
 
+// Enhanced Word Builder Game (Wordscape Style)
+const WordBuilderGame = ({ theme, onGameEnd, selectedAvatar }) => {
+  const [letters, setLetters] = useState([]);
+  const [targetWords, setTargetWords] = useState([]);
+  const [foundWords, setFoundWords] = useState([]);
+  const [currentWord, setCurrentWord] = useState('');
+  const [selectedLetters, setSelectedLetters] = useState([]);
+  const [score, setScore] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [particles, setParticles] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const wordSets = {
+    1: { letters: ['I', 'C', 'E'], words: ['ICE'], theme: 'frozen' },
+    2: { letters: ['S', 'N', 'O', 'W'], words: ['SNOW', 'NOW', 'OWN', 'SON'], theme: 'frozen' },
+    3: { letters: ['F', 'R', 'O', 'Z', 'E', 'N'], words: ['FROZEN', 'ZONE', 'ZERO', 'FORE', 'FOR', 'OR', 'NO'], theme: 'frozen' },
+    4: { letters: ['S', 'P', 'I', 'D', 'E', 'R'], words: ['SPIDER', 'RIDE', 'PRIDE', 'PIER', 'RIPE', 'RED', 'SIP'], theme: 'spiderman' },
+    5: { letters: ['O', 'C', 'E', 'A', 'N'], words: ['OCEAN', 'ONCE', 'CONE', 'ACE', 'CAN'], theme: 'moana' }
+  };
+
+  // Enhanced particle effects
+  const createWordParticle = (x, y, word) => {
+    const newParticles = Array(15).fill().map((_, i) => ({
+      id: Math.random(),
+      x: x + (Math.random() - 0.5) * 100,
+      y: y + (Math.random() - 0.5) * 100,
+      opacity: 1,
+      scale: Math.random() * 0.5 + 0.5,
+      rotation: Math.random() * 360,
+      type: word.length >= 6 ? 'star' : 'sparkle',
+      word: word
+    }));
+    setParticles(prev => [...prev, ...newParticles]);
+    
+    setTimeout(() => {
+      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
+    }, 2000);
+  };
+
+  // Initialize level
+  useEffect(() => {
+    const levelData = wordSets[level] || wordSets[1];
+    const letterObjects = levelData.letters.map((letter, index) => ({
+      id: index,
+      letter,
+      isSelected: false,
+      position: { 
+        x: Math.cos((index * 360) / levelData.letters.length * Math.PI / 180) * 120,
+        y: Math.sin((index * 360) / levelData.letters.length * Math.PI / 180) * 120
+      }
+    }));
+    
+    setLetters(letterObjects);
+    setTargetWords(levelData.words);
+    setFoundWords([]);
+    setCurrentWord('');
+    setSelectedLetters([]);
+  }, [level]);
+
+  // Handle letter selection with enhanced animations
+  const handleLetterClick = (letterId) => {
+    if (isAnimating) return;
+    
+    const letter = letters.find(l => l.id === letterId);
+    if (!letter || letter.isSelected) return;
+
+    const newSelectedLetters = [...selectedLetters, letterId];
+    const newCurrentWord = currentWord + letter.letter;
+    
+    setSelectedLetters(newSelectedLetters);
+    setCurrentWord(newCurrentWord);
+    
+    setLetters(prev => prev.map(l => 
+      l.id === letterId ? { ...l, isSelected: true } : l
+    ));
+
+    // Play selection sound effect
+    createWordParticle(200 + letterId * 20, 300, letter.letter);
+  };
+
+  // Submit word with enhanced feedback
+  const submitWord = () => {
+    if (currentWord.length < 2) return;
+    
+    setIsAnimating(true);
+    
+    if (targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
+      // Correct word found!
+      const wordScore = currentWord.length * 10 * (streak + 1);
+      setFoundWords(prev => [...prev, currentWord]);
+      setScore(prev => prev + wordScore);
+      setStreak(prev => prev + 1);
+      
+      // Create celebration particles
+      createWordParticle(400, 200, currentWord);
+      
+      // Check if level complete
+      if (foundWords.length + 1 === targetWords.length) {
+        setTimeout(() => {
+          if (level < 5) {
+            setLevel(prev => prev + 1);
+          } else {
+            onGameEnd('win', { score, level, avatar: selectedAvatar });
+          }
+        }, 1500);
+      }
+    } else {
+      // Word not found or already found
+      setStreak(0);
+    }
+    
+    setTimeout(() => {
+      clearSelection();
+      setIsAnimating(false);
+    }, 1000);
+  };
+
+  // Clear selection with animation
+  const clearSelection = () => {
+    setSelectedLetters([]);
+    setCurrentWord('');
+    setLetters(prev => prev.map(l => ({ ...l, isSelected: false })));
+  };
+
+  // Hint system
+  const useHint = () => {
+    if (hintsUsed >= 3) return;
+    
+    const unFoundWords = targetWords.filter(word => !foundWords.includes(word));
+    if (unFoundWords.length === 0) return;
+    
+    const hintWord = unFoundWords[0];
+    const firstLetter = hintWord[0];
+    
+    // Highlight first letter
+    const firstLetterObj = letters.find(l => l.letter === firstLetter);
+    if (firstLetterObj) {
+      handleLetterClick(firstLetterObj.id);
+    }
+    
+    setHintsUsed(prev => prev + 1);
+  };
+
+  return (
+    <div className={`min-h-screen bg-gradient-to-br ${theme.colors.secondary} p-4 relative overflow-hidden`}>
+      
+      {/* Theme-specific background effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        {theme.id === 'frozen' && (
+          <>
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute text-blue-200 text-opacity-30"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  fontSize: `${Math.random() * 20 + 10}px`
+                }}
+                animate={{
+                  y: ['0vh', '100vh'],
+                  rotate: [0, 360]
+                }}
+                transition={{
+                  duration: Math.random() * 4 + 3,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              >
+                ❄️
+              </motion.div>
+            ))}
+          </>
+        )}
+      </div>
+
+      <div className="max-w-5xl mx-auto relative z-10">
+        {/* Enhanced Header */}
+        <motion.div 
+          className="flex justify-between items-center mb-8 bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/30"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-6xl">{selectedAvatar?.emoji || '👧🏽'}</div>
+            <div>
+              <div className="text-3xl font-bold">📝 Word Builder</div>
+              <div className="text-lg text-gray-600">Level {level} - {selectedAvatar?.name || 'Emmy'}</div>
+            </div>
+          </div>
+          
+          <div className="flex gap-4">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+              <Star className="inline w-5 h-5 mr-2" />
+              {score.toLocaleString()}
+            </div>
+            <div className="bg-gradient-to-r from-purple-400 to-pink-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+              <Trophy className="inline w-5 h-5 mr-2" />
+              {foundWords.length}/{targetWords.length}
+            </div>
+            <div className="bg-gradient-to-r from-green-400 to-teal-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+              🔥 Streak: {streak}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Current Word Display */}
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+        >
+          <div className="bg-white/30 backdrop-blur-lg rounded-3xl p-8 max-w-2xl mx-auto border border-white/50 shadow-2xl">
+            <h3 className="text-2xl font-bold mb-6 text-gray-800">Current Word</h3>
+            <div className="text-5xl font-bold tracking-widest mb-6 min-h-[80px] flex items-center justify-center">
+              <motion.span
+                key={currentWord}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+              >
+                {currentWord || 'Select letters...'}
+              </motion.span>
+            </div>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <motion.button
+                onClick={submitWord}
+                disabled={currentWord.length === 0 || isAnimating}
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
+                whileHover={{ scale: currentWord.length > 0 ? 1.05 : 1 }}
+                whileTap={{ scale: currentWord.length > 0 ? 0.95 : 1 }}
+              >
+                ✓ Submit Word
+              </motion.button>
+              <motion.button
+                onClick={clearSelection}
+                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                🗑️ Clear
+              </motion.button>
+              <motion.button
+                onClick={useHint}
+                disabled={hintsUsed >= 3}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
+                whileHover={{ scale: hintsUsed < 3 ? 1.05 : 1 }}
+                whileTap={{ scale: hintsUsed < 3 ? 0.95 : 1 }}
+              >
+                💡 Hint ({3 - hintsUsed} left)
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Letter Circle */}
+          <div className="lg:col-span-2">
+            <motion.div 
+              className="relative w-full h-96 mx-auto mb-8"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+            >
+              <div className="absolute inset-0 rounded-full bg-white/20 backdrop-blur-lg border border-white/30 shadow-2xl"></div>
+              {letters.map((letter, index) => {
+                const angle = (index * 360) / letters.length;
+                const radius = 140;
+                const x = Math.cos((angle - 90) * Math.PI / 180) * radius;
+                const y = Math.sin((angle - 90) * Math.PI / 180) * radius;
+                
+                return (
+                  <motion.button
+                    key={letter.id}
+                    className={`
+                      absolute w-20 h-20 rounded-full text-3xl font-bold
+                      transform -translate-x-1/2 -translate-y-1/2 transition-all shadow-lg
+                      ${letter.isSelected 
+                        ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white scale-110 shadow-2xl' 
+                        : 'bg-white hover:bg-gray-100 hover:scale-105 text-gray-800'
+                      }
+                    `}
+                    style={{
+                      left: `calc(50% + ${x}px)`,
+                      top: `calc(50% + ${y}px)`
+                    }}
+                    onClick={() => handleLetterClick(letter.id)}
+                    whileHover={{ scale: letter.isSelected ? 1.1 : 1.15, rotate: [0, -10, 10, 0] }}
+                    whileTap={{ scale: 0.9 }}
+                    animate={letter.isSelected ? {
+                      boxShadow: ["0 0 20px rgba(255,215,0,0.5)", "0 0 40px rgba(255,215,0,0.8)", "0 0 20px rgba(255,215,0,0.5)"]
+                    } : {}}
+                    transition={{ duration: 0.5, repeat: letter.isSelected ? Infinity : 0 }}
+                  >
+                    {letter.letter}
+                  </motion.button>
+                );
+              })}
+              
+              {/* Center decoration */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">
+                {theme.gameElements.wordscape[0] === 'ICE' ? '❄️' : 
+                 theme.gameElements.wordscape[0] === 'WEB' ? '🕷️' : '🌊'}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Found Words Panel */}
+          <div>
+            <motion.div 
+              className="bg-white/30 backdrop-blur-lg rounded-3xl p-6 border border-white/50 shadow-2xl"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+            >
+              <h3 className="text-2xl font-bold mb-6 text-center">🎯 Found Words</h3>
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {targetWords.map((word, index) => (
+                  <motion.div
+                    key={word}
+                    className={`
+                      p-4 rounded-2xl text-center font-bold transition-all border-2
+                      ${foundWords.includes(word)
+                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white border-green-300 shadow-lg'
+                        : 'bg-gray-200 text-gray-400 border-gray-300'
+                      }
+                    `}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={foundWords.includes(word) ? { scale: 1.05 } : {}}
+                  >
+                    <div className="text-lg">
+                      {foundWords.includes(word) ? word : '???'}
+                    </div>
+                    {foundWords.includes(word) && (
+                      <div className="text-sm opacity-80">
+                        +{word.length * 10} points
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mt-6">
+                <div className="flex justify-between mb-2">
+                  <span className="font-bold">Progress</span>
+                  <span>{Math.round((foundWords.length / targetWords.length) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <motion.div 
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(foundWords.length / targetWords.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Game Controls */}
+            <motion.div 
+              className="mt-6 bg-white/30 backdrop-blur-lg rounded-3xl p-6 border border-white/50 shadow-2xl"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="space-y-3">
+                <motion.button
+                  onClick={() => onGameEnd('quit', { score, level, avatar: selectedAvatar })}
+                  className="w-full p-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  🏠 Return to Hub
+                </motion.button>
+                
+                <motion.button
+                  onClick={() => window.location.reload()}
+                  className="w-full p-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  🔄 Restart Game
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Particle Effects */}
+        <AnimatePresence>
+          {particles.map(particle => (
+            <motion.div
+              key={particle.id}
+              className="absolute pointer-events-none text-3xl"
+              style={{ left: particle.x, top: particle.y }}
+              initial={{ opacity: 1, scale: particle.scale, rotate: particle.rotation }}
+              animate={{ 
+                opacity: 0, 
+                scale: particle.scale * 3, 
+                y: particle.y - 100,
+                rotate: particle.rotation + 360 
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2 }}
+            >
+              {particle.type === 'star' && '⭐'}
+              {particle.type === 'sparkle' && '✨'}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced Sparkle Crush Game with realistic graphics and physics
 const SparkleCrushGame = ({ theme, onGameEnd, selectedAvatar }) => {
   const [board, setBoard] = useState([]);
@@ -1036,22 +1453,1578 @@ const FamilyGamesHub = () => {
 
   const theme = DISNEY_THEMES[selectedTheme];
 
-  const familyGames = [
-    {
-      id: 'sparkle-crush',
-      title: 'Sparkle Crush',
-      icon: '💎',
-      description: 'Match magical elements in this addictive puzzle adventure!',
-      difficulty: 'Easy to Master',
-      players: 'Family Friendly',
-      component: SparkleCrushGame,
-      minAge: 4,
-      skills: ['Pattern Recognition', 'Strategic Thinking', 'Color Matching']
-    }
-    // Note: Other games would be implemented similarly with enhanced features
-  ];
+      // Enhanced Snowball Shooter Game (Angry Birds Style)
+    const SnowballShooterGame = ({ theme, onGameEnd, selectedAvatar }) => {
+      const [projectile, setProjectile] = useState(null);
+      const [targets, setTargets] = useState([]);
+      const [obstacles, setObstacles] = useState([]);
+      const [score, setScore] = useState(0);
+      const [shotsLeft, setShotsLeft] = useState(5);
+      const [isAiming, setIsAiming] = useState(false);
+      const [aimDirection, setAimDirection] = useState({ x: 0, y: 0 });
+      const [level, setLevel] = useState(1);
+      const [particles, setParticles] = useState([]);
+      const [powerUps, setPowerUps] = useState({ multiShot: 1, explosive: 1, superSpeed: 1 });
+      const [selectedPowerUp, setSelectedPowerUp] = useState(null);
+      const [trajectory, setTrajectory] = useState([]);
+      
+      const gameElements = theme.gameElements.angryBirds;
 
-  const handleGameEnd = (result, data) => {
+      // Enhanced particle effects
+      const createExplosion = (x, y, type = 'hit') => {
+        const particleCount = type === 'explosion' ? 20 : 10;
+        const newParticles = Array(particleCount).fill().map((_, i) => ({
+          id: Math.random(),
+          x: x + (Math.random() - 0.5) * 100,
+          y: y + (Math.random() - 0.5) * 100,
+          opacity: 1,
+          scale: Math.random() * 0.5 + 0.5,
+          rotation: Math.random() * 360,
+          type,
+          velocityX: (Math.random() - 0.5) * 200,
+          velocityY: (Math.random() - 0.5) * 200
+        }));
+        setParticles(prev => [...prev, ...newParticles]);
+        
+        setTimeout(() => {
+          setParticles(prev => prev.filter(p => !newParticles.includes(p)));
+        }, 1500);
+      };
+
+      // Initialize level with enhanced target patterns
+      useEffect(() => {
+        const levelConfigs = {
+          1: {
+            targets: [
+              { id: 1, x: 70, y: 60, hit: false, health: 1, type: 'basic' },
+              { id: 2, x: 80, y: 40, hit: false, health: 1, type: 'basic' }
+            ],
+            obstacles: [
+              { id: 1, x: 65, y: 70, type: 'block', health: 1 }
+            ]
+          },
+          2: {
+            targets: [
+              { id: 1, x: 65, y: 50, hit: false, health: 2, type: 'strong' },
+              { id: 2, x: 75, y: 30, hit: false, health: 1, type: 'basic' },
+              { id: 3, x: 85, y: 70, hit: false, health: 1, type: 'basic' }
+            ],
+            obstacles: [
+              { id: 1, x: 60, y: 60, type: 'block', health: 2 },
+              { id: 2, x: 80, y: 50, type: 'block', health: 1 }
+            ]
+          },
+          3: {
+            targets: [
+              { id: 1, x: 70, y: 40, hit: false, health: 3, type: 'boss' },
+              { id: 2, x: 60, y: 60, hit: false, health: 1, type: 'basic' },
+              { id: 3, x: 80, y: 60, hit: false, health: 1, type: 'basic' },
+              { id: 4, x: 75, y: 80, hit: false, health: 2, type: 'strong' }
+            ],
+            obstacles: [
+              { id: 1, x: 65, y: 50, type: 'block', health: 2 },
+              { id: 2, x: 75, y: 50, type: 'block', health: 2 },
+              { id: 3, x: 85, y: 70, type: 'block', health: 1 }
+            ]
+          }
+        };
+
+        const config = levelConfigs[level] || levelConfigs[1];
+        setTargets(config.targets);
+        setObstacles(config.obstacles);
+        setShotsLeft(5 + level);
+        setScore(0);
+      }, [level]);
+
+      // Enhanced trajectory calculation
+      const calculateTrajectory = (direction, power = 1) => {
+        const points = [];
+        const steps = 20;
+        const gravity = 0.3;
+        
+        for (let i = 0; i < steps; i++) {
+          const t = i / steps * 3;
+          const x = 10 + direction.x * power * t * 100;
+          const y = 50 + direction.y * power * t * 100 + gravity * t * t * 20;
+          
+          if (x > 100 || y > 100 || y < 0) break;
+          points.push({ x, y });
+        }
+        
+        setTrajectory(points);
+      };
+
+      // Enhanced shooting with power-ups
+      const handleShoot = (direction) => {
+        if (shotsLeft <= 0 || projectile) return;
+
+        const power = selectedPowerUp === 'superSpeed' ? 1.5 : 1;
+        const projectileCount = selectedPowerUp === 'multiShot' ? 3 : 1;
+        
+        // Use power-up
+        if (selectedPowerUp) {
+          setPowerUps(prev => ({ ...prev, [selectedPowerUp]: prev[selectedPowerUp] - 1 }));
+          setSelectedPowerUp(null);
+        }
+
+        for (let i = 0; i < projectileCount; i++) {
+          const spreadAngle = projectileCount > 1 ? (i - 1) * 0.2 : 0;
+          const adjustedDirection = {
+            x: direction.x + spreadAngle,
+            y: direction.y + spreadAngle * 0.5
+          };
+
+          const newProjectile = {
+            id: Math.random(),
+            x: 10,
+            y: 50,
+            velocityX: adjustedDirection.x * 5 * power,
+            velocityY: adjustedDirection.y * 5 * power,
+            active: true,
+            explosive: selectedPowerUp === 'explosive',
+            trail: []
+          };
+
+          setProjectile(newProjectile);
+          animateProjectile(newProjectile);
+        }
+
+        setShotsLeft(prev => prev - 1);
+        setIsAiming(false);
+        setTrajectory([]);
+      };
+
+      // Enhanced projectile animation with physics
+      const animateProjectile = (initialProjectile) => {
+        let currentProjectile = { ...initialProjectile };
+        
+        const animate = () => {
+          setProjectile(prev => {
+            if (!prev || !prev.active) return null;
+
+            const newX = prev.x + prev.velocityX;
+            const newY = prev.y + prev.velocityY + 0.3; // gravity
+            const newTrail = [...prev.trail, { x: prev.x, y: prev.y }].slice(-8);
+
+            // Check bounds
+            if (newX > 100 || newY > 100 || newY < 0) {
+              return null;
+            }
+
+            // Check target collisions
+            let hitTarget = false;
+            setTargets(prevTargets => {
+              return prevTargets.map(target => {
+                if (!target.hit && 
+                    Math.abs(newX - target.x) < 8 && 
+                    Math.abs(newY - target.y) < 8) {
+                  
+                  const newHealth = target.health - 1;
+                  hitTarget = true;
+                  
+                  if (prev.explosive) {
+                    createExplosion(target.x, target.y, 'explosion');
+                    // Damage nearby targets
+                    setTargets(prevAll => prevAll.map(t => {
+                      const distance = Math.sqrt(Math.pow(t.x - target.x, 2) + Math.pow(t.y - target.y, 2));
+                      if (distance < 15 && !t.hit) {
+                        return { ...t, health: Math.max(0, t.health - 1), hit: t.health <= 1 };
+                      }
+                      return t;
+                    }));
+                  } else {
+                    createExplosion(target.x, target.y, 'hit');
+                  }
+                  
+                  const points = target.type === 'boss' ? 500 : target.type === 'strong' ? 200 : 100;
+                  setScore(prevScore => prevScore + points);
+                  
+                  return { ...target, health: newHealth, hit: newHealth <= 0 };
+                }
+                return target;
+              });
+            });
+
+            // Check obstacle collisions
+            setObstacles(prevObstacles => {
+              return prevObstacles.map(obstacle => {
+                if (Math.abs(newX - obstacle.x) < 6 && 
+                    Math.abs(newY - obstacle.y) < 6) {
+                  
+                  const newHealth = obstacle.health - 1;
+                  createExplosion(obstacle.x, obstacle.y, 'break');
+                  
+                  if (newHealth <= 0) {
+                    setScore(prevScore => prevScore + 50);
+                  }
+                  
+                  return { ...obstacle, health: newHealth };
+                }
+                return obstacle;
+              }).filter(obstacle => obstacle.health > 0);
+            });
+
+            if (hitTarget) {
+              return null;
+            }
+
+            return {
+              ...prev,
+              x: newX,
+              y: newY,
+              velocityY: prev.velocityY + 0.3,
+              trail: newTrail
+            };
+          });
+        };
+
+        const interval = setInterval(animate, 50);
+        setTimeout(() => {
+          clearInterval(interval);
+          setProjectile(null);
+        }, 4000);
+      };
+
+      // Check game end conditions
+      useEffect(() => {
+        const allTargetsDestroyed = targets.every(t => t.hit);
+        if (allTargetsDestroyed && targets.length > 0) {
+          setTimeout(() => {
+            if (level < 3) {
+              setLevel(prev => prev + 1);
+            } else {
+              onGameEnd('win', { score, level, avatar: selectedAvatar });
+            }
+          }, 1500);
+        } else if (shotsLeft <= 0 && !projectile) {
+          setTimeout(() => onGameEnd('lose', { score, level, avatar: selectedAvatar }), 1000);
+        }
+      }, [targets, shotsLeft, projectile, score, level, onGameEnd, selectedAvatar]);
+
+      return (
+        <div className={`min-h-screen bg-gradient-to-br ${theme.colors.secondary} p-4 relative overflow-hidden`}>
+          
+          {/* Enhanced Header */}
+          <motion.div 
+            className="flex justify-between items-center mb-6 bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/30"
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">{selectedAvatar?.emoji || '👧🏽'}</div>
+              <div>
+                <div className="text-3xl font-bold">{gameElements.bird} Element Shooter</div>
+                <div className="text-lg text-gray-600">Level {level} - {selectedAvatar?.name || 'Emmy'}</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                <Star className="inline w-5 h-5 mr-2" />
+                {score.toLocaleString()}
+              </div>
+              <div className="bg-gradient-to-r from-blue-400 to-purple-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                <Target className="inline w-5 h-5 mr-2" />
+                {shotsLeft} shots
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Game Area */}
+            <div className="lg:col-span-3">
+              <motion.div 
+                className="relative h-96 bg-gradient-to-b from-sky-200 to-green-200 rounded-3xl overflow-hidden border-4 border-white/30 shadow-2xl"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onMouseMove={(e) => {
+                  if (isAiming) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width - 0.1) * 2;
+                    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+                    const direction = { x: Math.max(0, x), y: -y };
+                    setAimDirection(direction);
+                    calculateTrajectory(direction);
+                  }
+                }}
+                onClick={(e) => {
+                  if (isAiming) {
+                    handleShoot(aimDirection);
+                  } else {
+                    setIsAiming(true);
+                  }
+                }}
+              >
+                {/* Shooter */}
+                <motion.div
+                  className="absolute text-5xl cursor-pointer z-10"
+                  style={{ left: '8%', top: '45%' }}
+                  whileHover={{ scale: 1.1 }}
+                  animate={isAiming ? { 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, -5, 5, 0]
+                  } : {}}
+                  transition={{ repeat: isAiming ? Infinity : 0, duration: 0.8 }}
+                >
+                  {gameElements.bird}
+                </motion.div>
+
+                {/* Trajectory line */}
+                {isAiming && trajectory.length > 0 && (
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                    <path
+                      d={`M ${trajectory[0]?.x}% ${trajectory[0]?.y}% ${trajectory.map(point => `L ${point.x}% ${point.y}%`).join(' ')}`}
+                      stroke="rgba(255,255,255,0.8)"
+                      strokeWidth="3"
+                      strokeDasharray="10,5"
+                      fill="none"
+                    />
+                  </svg>
+                )}
+
+                {/* Projectile with trail */}
+                {projectile && (
+                  <>
+                    {/* Trail */}
+                    {projectile.trail.map((point, index) => (
+                      <motion.div
+                        key={index}
+                        className="absolute w-3 h-3 bg-yellow-400 rounded-full opacity-50"
+                        style={{
+                          left: `${point.x}%`,
+                          top: `${point.y}%`,
+                          opacity: (index / projectile.trail.length) * 0.8
+                        }}
+                      />
+                    ))}
+                    
+                    {/* Main projectile */}
+                    <motion.div
+                      className="absolute text-3xl z-10"
+                      style={{
+                        left: `${projectile.x}%`,
+                        top: `${projectile.y}%`
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ 
+                        scale: 1,
+                        rotate: projectile.explosive ? [0, 360] : 0
+                      }}
+                      transition={{ 
+                        rotate: { duration: 0.5, repeat: projectile.explosive ? Infinity : 0 }
+                      }}
+                    >
+                      {projectile.explosive ? '💥' : gameElements.bird}
+                    </motion.div>
+                  </>
+                )}
+
+                {/* Targets */}
+                {targets.map(target => (
+                  <motion.div
+                    key={target.id}
+                    className={`absolute text-4xl transition-all z-10 ${target.hit ? 'opacity-30 scale-50' : ''}`}
+                    style={{
+                      left: `${target.x}%`,
+                      top: `${target.y}%`
+                    }}
+                    animate={target.hit ? { 
+                      scale: 0, 
+                      rotate: 720,
+                      opacity: 0 
+                    } : {
+                      scale: target.health < (target.type === 'boss' ? 3 : target.type === 'strong' ? 2 : 1) ? [1, 1.2, 1] : 1
+                    }}
+                    transition={{ duration: 0.5 }}
+                    whileHover={{ scale: target.hit ? 0 : 1.1 }}
+                  >
+                    <div className="relative">
+                      {target.type === 'boss' ? '👑' : target.type === 'strong' ? '🛡️' : ''}
+                      {gameElements.target}
+                      {/* Health indicator */}
+                      {target.health > 1 && !target.hit && (
+                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                          {target.health}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Obstacles */}
+                {obstacles.map(obstacle => (
+                  <motion.div
+                    key={obstacle.id}
+                    className="absolute text-3xl z-10"
+                    style={{
+                      left: `${obstacle.x}%`,
+                      top: `${obstacle.y}%`
+                    }}
+                    animate={obstacle.health < 2 ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  >
+                    <div className="relative">
+                      {gameElements.obstacle}
+                      {obstacle.health > 1 && (
+                        <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                          {obstacle.health}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Instructions */}
+                {isAiming && (
+                  <motion.div
+                    className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-6 py-3 rounded-full text-lg font-bold z-20"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    🎯 Aim and click to shoot!
+                  </motion.div>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Power-ups and Controls */}
+            <div className="space-y-6">
+              {/* Power-ups */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">🎯 Power-Ups</h3>
+                <div className="space-y-3">
+                  {Object.entries(powerUps).map(([type, count]) => (
+                    <motion.button
+                      key={type}
+                      onClick={() => setSelectedPowerUp(type)}
+                      disabled={count <= 0}
+                      className={`w-full p-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-between ${
+                        selectedPowerUp === type
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-xl scale-105'
+                          : count > 0 
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      whileHover={count > 0 ? { scale: 1.05 } : {}}
+                      whileTap={count > 0 ? { scale: 0.95 } : {}}
+                    >
+                      <span>
+                        {type === 'multiShot' && '🎯 Multi-Shot'}
+                        {type === 'explosive' && '💥 Explosive'}
+                        {type === 'superSpeed' && '🌟 Super Speed'}
+                      </span>
+                      <span className="bg-white/20 px-3 py-1 rounded-full">{count}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Game Controls */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={() => onGameEnd('quit', { score, level, avatar: selectedAvatar })}
+                    className="w-full p-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🏠 Return to Hub
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => window.location.reload()}
+                    className="w-full p-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🔄 Restart Game
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Particle Effects */}
+          <AnimatePresence>
+            {particles.map(particle => (
+              <motion.div
+                key={particle.id}
+                className="absolute pointer-events-none text-2xl z-20"
+                style={{ 
+                  left: `${particle.x}%`, 
+                  top: `${particle.y}%`,
+                  transform: `rotate(${particle.rotation}deg)`
+                }}
+                initial={{ opacity: 1, scale: particle.scale }}
+                animate={{ 
+                  opacity: 0, 
+                  scale: particle.scale * 2,
+                  x: particle.velocityX,
+                  y: particle.velocityY,
+                  rotate: particle.rotation + 360
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5 }}
+              >
+                {particle.type === 'explosion' && '💥'}
+                {particle.type === 'hit' && '⭐'}
+                {particle.type === 'break' && '💫'}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      );
+    };
+
+    const familyGames = [
+      {
+        id: 'sparkle-crush',
+        title: 'Sparkle Crush',
+        icon: '💎',
+        description: 'Match magical elements in this addictive puzzle adventure!',
+        difficulty: 'Easy to Master',
+        players: 'Family Friendly',
+        component: SparkleCrushGame,
+        minAge: 4,
+        skills: ['Pattern Recognition', 'Strategic Thinking', 'Color Matching']
+      },
+      {
+        id: 'word-builder',
+        title: 'Word Builder',
+        icon: '📝',
+        description: 'Create words from letter circles - parents will love helping!',
+        difficulty: 'Educational & Fun',
+        players: 'Family Friendly',
+        component: WordBuilderGame,
+        minAge: 5,
+        skills: ['Vocabulary', 'Spelling', 'Letter Recognition']
+      },
+      {
+        id: 'element-shooter',
+        title: 'Element Shooter',
+        icon: '🎯',
+        description: 'Physics-based shooting game with theme elements!',
+        difficulty: 'Action Packed',
+        players: 'Turn-based Competition',
+        component: SnowballShooterGame,
+        minAge: 6,
+        skills: ['Hand-eye Coordination', 'Physics', 'Strategic Aiming']
+             },
+       {
+         id: 'element-slice',
+         title: 'Element Slice',
+         icon: '⚔️',
+         description: 'Fast-paced slicing action - slice theme elements, avoid bombs!',
+         difficulty: 'Quick Reflexes',
+         players: 'High Score Challenge',
+         component: ElementSliceGame,
+         minAge: 5,
+         skills: ['Hand-eye Coordination', 'Quick Reflexes', 'Pattern Recognition']
+       },
+       {
+         id: 'block-builder',
+         title: 'Block Builder',
+         icon: '🏗️',
+         description: 'Build amazing structures together in this creative sandbox!',
+         difficulty: 'Creative & Relaxing',
+         players: 'Collaborative Building',
+         component: BlockBuilderGame,
+         minAge: 4,
+         skills: ['Creativity', 'Spatial Thinking', 'Problem Solving']
+       }
+     ];
+
+    // Enhanced Element Slice Game (Fruit Ninja Style)
+    const ElementSliceGame = ({ theme, onGameEnd, selectedAvatar }) => {
+      const [elements, setElements] = useState([]);
+      const [score, setScore] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(60);
+      const [combo, setCombo] = useState(0);
+      const [comboTimer, setComboTimer] = useState(0);
+      const [isSlicing, setIsSlicing] = useState(false);
+      const [sliceTrail, setSliceTrail] = useState([]);
+      const [particles, setParticles] = useState([]);
+      const [level, setLevel] = useState(1);
+      const [lives, setLives] = useState(3);
+      const [powerUps, setPowerUps] = useState({ freeze: 2, doubleScore: 2, shield: 1 });
+      const [activePowerUp, setActivePowerUp] = useState(null);
+      
+      const gameElements = theme.gameElements.fruitNinja;
+
+      // Enhanced particle effects
+      const createSliceEffect = (x, y, element, isCombo = false) => {
+        const particleCount = isCombo ? 15 : 8;
+        const newParticles = Array(particleCount).fill().map((_, i) => ({
+          id: Math.random(),
+          x: x + (Math.random() - 0.5) * 60,
+          y: y + (Math.random() - 0.5) * 60,
+          opacity: 1,
+          scale: Math.random() * 0.8 + 0.5,
+          rotation: Math.random() * 360,
+          type: isCombo ? 'combo' : 'slice',
+          element,
+          velocityX: (Math.random() - 0.5) * 200,
+          velocityY: (Math.random() - 0.5) * 200 - 50
+        }));
+        setParticles(prev => [...prev, ...newParticles]);
+        
+        setTimeout(() => {
+          setParticles(prev => prev.filter(p => !newParticles.includes(p)));
+        }, 2000);
+      };
+
+      // Generate random element with enhanced properties
+      const generateElement = () => {
+        const elementType = gameElements[Math.floor(Math.random() * gameElements.length)];
+        const isBomb = Math.random() < (0.08 + level * 0.02); // Increasing bomb chance
+        const isGolden = Math.random() < 0.05; // 5% chance for golden element
+        
+        return {
+          id: Math.random(),
+          type: isBomb ? '💣' : elementType,
+          x: Math.random() * 80 + 10,
+          y: 110,
+          velocityX: (Math.random() - 0.5) * 4,
+          velocityY: -(Math.random() * 6 + 6 + level),
+          rotation: 0,
+          rotationSpeed: (Math.random() - 0.5) * 8,
+          sliced: false,
+          isBomb,
+          isGolden,
+          size: isBomb ? 1.2 : isGolden ? 1.5 : 1,
+          points: isGolden ? 50 : 10
+        };
+      };
+
+      // Spawn elements with increasing difficulty
+      useEffect(() => {
+        const spawnInterval = setInterval(() => {
+          if (timeLeft > 0 && (!activePowerUp || activePowerUp !== 'freeze')) {
+            const spawnCount = Math.random() < 0.3 ? 2 : 1; // 30% chance for double spawn
+            for (let i = 0; i < spawnCount; i++) {
+              setTimeout(() => {
+                setElements(prev => [...prev, generateElement()]);
+              }, i * 200);
+            }
+          }
+        }, Math.max(800 - level * 100, 400)); // Faster spawning with level
+
+        return () => clearInterval(spawnInterval);
+      }, [timeLeft, level, activePowerUp]);
+
+      // Update element positions with physics
+      useEffect(() => {
+        const updateInterval = setInterval(() => {
+          if (activePowerUp === 'freeze') return;
+          
+          setElements(prev => 
+            prev.map(element => ({
+              ...element,
+              x: element.x + element.velocityX,
+              y: element.y + element.velocityY,
+              velocityY: element.velocityY + 0.4, // gravity
+              rotation: element.rotation + element.rotationSpeed
+            })).filter(element => 
+              element.y < 120 && element.x > -10 && element.x < 110 && !element.sliced
+            )
+          );
+        }, 50);
+
+        return () => clearInterval(updateInterval);
+      }, [activePowerUp]);
+
+      // Combo timer
+      useEffect(() => {
+        if (comboTimer > 0) {
+          const timer = setTimeout(() => {
+            setComboTimer(prev => prev - 1);
+            if (comboTimer === 1) {
+              setCombo(0);
+            }
+          }, 100);
+          return () => clearTimeout(timer);
+        }
+      }, [comboTimer]);
+
+      // Main timer
+      useEffect(() => {
+        if (timeLeft > 0) {
+          const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+          return () => clearTimeout(timer);
+        } else {
+          onGameEnd('complete', { score, combo, level, avatar: selectedAvatar });
+        }
+      }, [timeLeft, score, combo, level, onGameEnd, selectedAvatar]);
+
+      // Enhanced slice handling
+      const handleSlice = (elementId, event) => {
+        event.preventDefault();
+        
+        setElements(prev => 
+          prev.map(element => {
+            if (element.id === elementId && !element.sliced) {
+              const rect = event.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 100, height: 100 };
+              const x = event.clientX ? ((event.clientX - rect.left) / rect.width) * 100 : element.x;
+              const y = event.clientY ? ((event.clientY - rect.top) / rect.height) * 100 : element.y;
+              
+              if (element.isBomb) {
+                // Bomb hit - lose life or end game
+                if (activePowerUp === 'shield') {
+                  setActivePowerUp(null);
+                  createSliceEffect(x, y, '🛡️');
+                } else {
+                  setLives(prev => {
+                    const newLives = prev - 1;
+                    if (newLives <= 0) {
+                      setTimeout(() => onGameEnd('lose', { score, combo, level, avatar: selectedAvatar }), 1000);
+                    }
+                    return newLives;
+                  });
+                  createSliceEffect(x, y, '💥');
+                  setCombo(0);
+                  setComboTimer(0);
+                }
+                return { ...element, sliced: true };
+              } else {
+                // Normal element sliced
+                const comboMultiplier = Math.max(1, Math.floor(combo / 3) + 1);
+                const powerMultiplier = activePowerUp === 'doubleScore' ? 2 : 1;
+                const points = element.points * comboMultiplier * powerMultiplier;
+                
+                setScore(prevScore => prevScore + points);
+                setCombo(prevCombo => prevCombo + 1);
+                setComboTimer(20); // 2 seconds to continue combo
+                
+                createSliceEffect(x, y, element.type, combo > 5);
+                
+                return { ...element, sliced: true };
+              }
+            }
+            return element;
+          })
+        );
+
+        // Add slice trail effect
+        const rect = event.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 100, height: 100 };
+        const x = event.clientX ? ((event.clientX - rect.left) / rect.width) * 100 : 50;
+        const y = event.clientY ? ((event.clientY - rect.top) / rect.height) * 100 : 50;
+        
+        setSliceTrail(prev => [...prev, { x, y, id: Math.random() }]);
+        setTimeout(() => {
+          setSliceTrail(prev => prev.filter(trail => trail.id !== Math.random()));
+        }, 500);
+      };
+
+      // Power-up usage
+      const usePowerUp = (type) => {
+        if (powerUps[type] <= 0 || activePowerUp) return;
+        
+        setPowerUps(prev => ({ ...prev, [type]: prev[type] - 1 }));
+        setActivePowerUp(type);
+        
+        if (type === 'freeze') {
+          setTimeout(() => setActivePowerUp(null), 3000);
+        } else if (type === 'doubleScore') {
+          setTimeout(() => setActivePowerUp(null), 10000);
+        } else if (type === 'shield') {
+          setTimeout(() => setActivePowerUp(null), 15000);
+        }
+      };
+
+      return (
+        <div className={`min-h-screen bg-gradient-to-br ${theme.colors.secondary} p-4 overflow-hidden relative`}>
+          
+          {/* Enhanced Header */}
+          <motion.div 
+            className="flex justify-between items-center mb-6 bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/30 relative z-10"
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">{selectedAvatar?.emoji || '👧🏽'}</div>
+              <div>
+                <div className="text-3xl font-bold">⚔️ Element Slice</div>
+                <div className="text-lg text-gray-600">Level {level} - {selectedAvatar?.name || 'Emmy'}</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                <Star className="inline w-5 h-5 mr-2" />
+                {score.toLocaleString()}
+              </div>
+              <div className="bg-gradient-to-r from-red-400 to-pink-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                ⏰ {timeLeft}s
+              </div>
+              <div className="bg-gradient-to-r from-purple-400 to-indigo-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                🔥 Combo x{combo}
+              </div>
+              <div className="bg-gradient-to-r from-green-400 to-emerald-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                💝 Lives: {lives}
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Game Area */}
+            <div className="lg:col-span-3">
+              <div 
+                className={`relative h-96 bg-gradient-to-b from-sky-100 to-green-100 rounded-3xl overflow-hidden border-4 border-white/30 shadow-2xl ${
+                  activePowerUp === 'freeze' ? 'filter blur-sm' : ''
+                }`}
+                onMouseDown={() => setIsSlicing(true)}
+                onMouseUp={() => setIsSlicing(false)}
+                onMouseLeave={() => setIsSlicing(false)}
+              >
+                {/* Elements */}
+                {elements.map(element => (
+                  <motion.div
+                    key={element.id}
+                    className={`absolute cursor-pointer select-none z-10 ${
+                      element.isBomb ? 'animate-pulse' : element.isGolden ? 'animate-bounce' : ''
+                    }`}
+                    style={{
+                      left: `${element.x}%`,
+                      top: `${element.y}%`,
+                      transform: `rotate(${element.rotation}deg) scale(${element.size})`,
+                      fontSize: `${3 * element.size}rem`
+                    }}
+                    onClick={(e) => handleSlice(element.id, e)}
+                    whileHover={{ scale: element.size * 1.1 }}
+                    animate={element.sliced ? { 
+                      scale: [element.size, element.size * 2, 0],
+                      rotate: element.rotation + 360,
+                      opacity: [1, 1, 0]
+                    } : {}}
+                    transition={{ duration: 0.4 }}
+                    initial={{ scale: 0 }}
+                  >
+                    <div className="relative">
+                      {element.type}
+                      {element.isGolden && (
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-4 border-yellow-400"
+                          animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.3, 0.8] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        />
+                      )}
+                      {element.points > 10 && (
+                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                          {element.points}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Slice Trails */}
+                {sliceTrail.map(trail => (
+                  <motion.div
+                    key={trail.id}
+                    className="absolute w-12 h-12 bg-yellow-400 rounded-full pointer-events-none z-20"
+                    style={{
+                      left: `${trail.x}%`,
+                      top: `${trail.y}%`
+                    }}
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{ scale: 3, opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                ))}
+
+                {/* Combo Display */}
+                <AnimatePresence>
+                  {combo > 5 && (
+                    <motion.div
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-8xl font-bold text-yellow-400 pointer-events-none z-20"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      exit={{ scale: 0, rotate: 180 }}
+                      key={combo}
+                    >
+                      <div className="text-center">
+                        <div>INCREDIBLE!</div>
+                        <div className="text-4xl">COMBO x{combo}!</div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Power-up Indicators */}
+                {activePowerUp && (
+                  <motion.div
+                    className="absolute top-4 right-4 bg-purple-600 text-white px-6 py-3 rounded-full font-bold text-lg z-20"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    {activePowerUp === 'freeze' && '🧊 FREEZE ACTIVE'}
+                    {activePowerUp === 'doubleScore' && '✨ DOUBLE SCORE'}
+                    {activePowerUp === 'shield' && '🛡️ SHIELD ACTIVE'}
+                  </motion.div>
+                )}
+
+                {/* Freeze overlay */}
+                {activePowerUp === 'freeze' && (
+                  <motion.div
+                    className="absolute inset-0 bg-blue-200 bg-opacity-30 flex items-center justify-center z-15"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <div className="text-6xl text-blue-600">🧊 TIME FROZEN 🧊</div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            {/* Power-ups and Stats */}
+            <div className="space-y-6">
+              {/* Power-ups */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">🎯 Power-Ups</h3>
+                <div className="space-y-3">
+                  {Object.entries(powerUps).map(([type, count]) => (
+                    <motion.button
+                      key={type}
+                      onClick={() => usePowerUp(type)}
+                      disabled={count <= 0 || activePowerUp}
+                      className={`w-full p-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-between ${
+                        activePowerUp === type
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-xl scale-105'
+                          : count > 0 && !activePowerUp
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      whileHover={count > 0 && !activePowerUp ? { scale: 1.05 } : {}}
+                      whileTap={count > 0 && !activePowerUp ? { scale: 0.95 } : {}}
+                    >
+                      <span>
+                        {type === 'freeze' && '🧊 Freeze Time'}
+                        {type === 'doubleScore' && '✨ Double Score'}
+                        {type === 'shield' && '🛡️ Bomb Shield'}
+                      </span>
+                      <span className="bg-white/20 px-3 py-1 rounded-full">{count}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Stats */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">📊 Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-white/20 rounded-xl">
+                    <span className="font-bold">Best Combo</span>
+                    <span className="text-2xl font-bold text-yellow-600">x{combo}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-white/20 rounded-xl">
+                    <span className="font-bold">Level</span>
+                    <span className="text-2xl font-bold text-blue-600">{level}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-white/20 rounded-xl">
+                    <span className="font-bold">Lives</span>
+                    <span className="text-2xl font-bold text-red-600">❤️ {lives}</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Game Controls */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={() => onGameEnd('quit', { score, combo, level, avatar: selectedAvatar })}
+                    className="w-full p-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🏠 Return to Hub
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => window.location.reload()}
+                    className="w-full p-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🔄 Restart Game
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <motion.div 
+            className="text-center mt-6 relative z-10"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <p className="text-xl font-bold text-white mb-2">🎯 Click on elements to slice them! Avoid the bombs! 💣</p>
+            <p className="text-lg text-gray-200">Build combos by slicing multiple elements quickly! Golden elements give bonus points! ⭐</p>
+          </motion.div>
+
+          {/* Particle Effects */}
+          <AnimatePresence>
+            {particles.map(particle => (
+              <motion.div
+                key={particle.id}
+                className="absolute pointer-events-none text-3xl z-20"
+                style={{ 
+                  left: `${particle.x}%`, 
+                  top: `${particle.y}%`,
+                  transform: `rotate(${particle.rotation}deg)`
+                }}
+                initial={{ opacity: 1, scale: particle.scale }}
+                animate={{ 
+                  opacity: 0, 
+                  scale: particle.scale * 2,
+                  x: particle.velocityX,
+                  y: particle.velocityY,
+                  rotate: particle.rotation + 360
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2 }}
+              >
+                {particle.type === 'combo' && '🌟'}
+                {particle.type === 'slice' && '✨'}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      );
+         };
+
+    // Enhanced Block Builder Game (Minecraft Style)
+    const BlockBuilderGame = ({ theme, onGameEnd, selectedAvatar }) => {
+      const [grid, setGrid] = useState([]);
+      const [selectedBlock, setSelectedBlock] = useState(null);
+      const [inventory, setInventory] = useState({});
+      const [mode, setMode] = useState('build'); // build, destroy, paint
+      const [project, setProject] = useState('house');
+      const [score, setScore] = useState(0);
+      const [structures, setStructures] = useState([]);
+      const [showGrid, setShowGrid] = useState(true);
+      const [particles, setParticles] = useState([]);
+      const [savedProjects, setSavedProjects] = useState([]);
+      const [buildingGuide, setBuildingGuide] = useState(false);
+      
+      const GRID_SIZE = 16;
+      const blocks = theme.gameElements.minecraft.blocks;
+
+      // Enhanced particle effects for building
+      const createBuildEffect = (x, y, blockType) => {
+        const newParticles = Array(6).fill().map((_, i) => ({
+          id: Math.random(),
+          x: x * (100 / GRID_SIZE) + (Math.random() - 0.5) * 20,
+          y: y * (100 / GRID_SIZE) + (Math.random() - 0.5) * 20,
+          opacity: 1,
+          scale: Math.random() * 0.5 + 0.5,
+          rotation: Math.random() * 360,
+          type: 'build',
+          block: blockType,
+          velocityX: (Math.random() - 0.5) * 100,
+          velocityY: (Math.random() - 0.5) * 100 - 30
+        }));
+        setParticles(prev => [...prev, ...newParticles]);
+        
+        setTimeout(() => {
+          setParticles(prev => prev.filter(p => !newParticles.includes(p)));
+        }, 1500);
+      };
+
+      // Initialize game with enhanced inventory
+      useEffect(() => {
+        const newGrid = Array(GRID_SIZE).fill().map((_, row) => 
+          Array(GRID_SIZE).fill().map((_, col) => ({
+            id: `${row}-${col}`,
+            block: null,
+            elevation: 0,
+            color: null
+          }))
+        );
+        setGrid(newGrid);
+        
+        const newInventory = {};
+        blocks.forEach(block => {
+          newInventory[block] = 50; // Start with 50 of each block
+        });
+        setInventory(newInventory);
+        setSelectedBlock(blocks[0]);
+      }, [blocks]);
+
+      // Enhanced cell interaction
+      const handleCellClick = (row, col) => {
+        const cell = grid[row][col];
+        
+        if (mode === 'build' && selectedBlock && inventory[selectedBlock] > 0) {
+          // Place block with elevation
+          const newGrid = grid.map(r => [...r]);
+          if (!newGrid[row][col].block) {
+            newGrid[row][col] = {
+              ...newGrid[row][col],
+              block: selectedBlock,
+              elevation: 0
+            };
+            setGrid(newGrid);
+            setInventory(prev => ({ ...prev, [selectedBlock]: prev[selectedBlock] - 1 }));
+            setScore(prev => prev + 10);
+            createBuildEffect(col, row, selectedBlock);
+          } else {
+            // Stack blocks (increase elevation)
+            newGrid[row][col].elevation = Math.min(newGrid[row][col].elevation + 1, 3);
+            setGrid(newGrid);
+            setInventory(prev => ({ ...prev, [selectedBlock]: prev[selectedBlock] - 1 }));
+            setScore(prev => prev + 5);
+            createBuildEffect(col, row, selectedBlock);
+          }
+        } else if (mode === 'destroy') {
+          // Remove block
+          const newGrid = grid.map(r => [...r]);
+          if (newGrid[row][col].block) {
+            const removedBlock = newGrid[row][col].block;
+            if (newGrid[row][col].elevation > 0) {
+              newGrid[row][col].elevation -= 1;
+            } else {
+              newGrid[row][col] = {
+                ...newGrid[row][col],
+                block: null,
+                elevation: 0
+              };
+            }
+            setGrid(newGrid);
+            setInventory(prev => ({ ...prev, [removedBlock]: prev[removedBlock] + 1 }));
+            setScore(prev => prev + 5);
+            createBuildEffect(col, row, '💥');
+          }
+        } else if (mode === 'paint' && cell.block) {
+          // Change block type
+          const newGrid = grid.map(r => [...r]);
+          if (selectedBlock && inventory[selectedBlock] > 0) {
+            const oldBlock = newGrid[row][col].block;
+            newGrid[row][col].block = selectedBlock;
+            setGrid(newGrid);
+            setInventory(prev => ({ 
+              ...prev, 
+              [selectedBlock]: prev[selectedBlock] - 1,
+              [oldBlock]: prev[oldBlock] + 1
+            }));
+          }
+        }
+      };
+
+      // Project templates with enhanced structures
+      const projectTemplates = {
+        house: {
+          name: '🏠 Cozy House',
+          description: 'Build a simple house with walls, roof, and door',
+          blocks: [
+            { row: 12, col: 6, block: blocks[0] }, { row: 12, col: 7, block: blocks[0] }, 
+            { row: 12, col: 8, block: blocks[0] }, { row: 12, col: 9, block: blocks[0] },
+            { row: 11, col: 6, block: blocks[1] }, { row: 11, col: 9, block: blocks[1] },
+            { row: 10, col: 6, block: blocks[1] }, { row: 10, col: 9, block: blocks[1] },
+            { row: 9, col: 6, block: blocks[2] }, { row: 9, col: 7, block: blocks[2] }, 
+            { row: 9, col: 8, block: blocks[2] }, { row: 9, col: 9, block: blocks[2] }
+          ]
+        },
+        castle: {
+          name: '🏰 Magic Castle',
+          description: 'Build a majestic castle with towers',
+          blocks: [
+            // Base walls
+            { row: 14, col: 4, block: blocks[0] }, { row: 14, col: 5, block: blocks[0] },
+            { row: 14, col: 10, block: blocks[0] }, { row: 14, col: 11, block: blocks[0] },
+            // Towers
+            { row: 13, col: 4, block: blocks[1] }, { row: 12, col: 4, block: blocks[1] },
+            { row: 13, col: 11, block: blocks[1] }, { row: 12, col: 11, block: blocks[1] },
+            // Central structure
+            { row: 13, col: 7, block: blocks[2] }, { row: 13, col: 8, block: blocks[2] },
+            { row: 12, col: 7, block: blocks[2] }, { row: 12, col: 8, block: blocks[2] }
+          ]
+        },
+        garden: {
+          name: '🌸 Flower Garden',
+          description: 'Create a beautiful garden layout',
+          blocks: [
+            { row: 13, col: 6, block: blocks[3] }, { row: 13, col: 9, block: blocks[3] },
+            { row: 12, col: 7, block: blocks[4] }, { row: 12, col: 8, block: blocks[4] },
+            { row: 11, col: 6, block: blocks[2] }, { row: 11, col: 9, block: blocks[2] },
+            { row: 10, col: 7, block: blocks[1] }, { row: 10, col: 8, block: blocks[1] }
+          ]
+        }
+      };
+
+      // Enhanced auto-build with animation
+      const autoBuildProject = () => {
+        const template = projectTemplates[project];
+        if (template) {
+          let blockIndex = 0;
+          const buildInterval = setInterval(() => {
+            if (blockIndex >= template.blocks.length) {
+              clearInterval(buildInterval);
+              setScore(prev => prev + 200);
+              return;
+            }
+
+            const { row, col, block } = template.blocks[blockIndex];
+            if (inventory[block] > 0) {
+              const newGrid = grid.map(r => [...r]);
+              newGrid[row][col] = {
+                ...newGrid[row][col],
+                block: block,
+                elevation: 0
+              };
+              setGrid(newGrid);
+              setInventory(prev => ({ ...prev, [block]: prev[block] - 1 }));
+              createBuildEffect(col, row, block);
+            }
+            blockIndex++;
+          }, 300);
+        }
+      };
+
+      // Save current project
+      const saveProject = () => {
+        const projectData = {
+          id: Date.now(),
+          name: `${selectedAvatar?.name || 'Player'}'s Creation`,
+          grid: grid,
+          score: score,
+          blocks: inventory
+        };
+        setSavedProjects(prev => [...prev, projectData]);
+      };
+
+      // Clear all blocks
+      const clearAll = () => {
+        const newGrid = Array(GRID_SIZE).fill().map((_, row) => 
+          Array(GRID_SIZE).fill().map((_, col) => ({
+            id: `${row}-${col}`,
+            block: null,
+            elevation: 0,
+            color: null
+          }))
+        );
+        setGrid(newGrid);
+        
+        // Restore inventory
+        const newInventory = {};
+        blocks.forEach(block => {
+          newInventory[block] = 50;
+        });
+        setInventory(newInventory);
+        setScore(0);
+      };
+
+      return (
+        <div className={`min-h-screen bg-gradient-to-br ${theme.colors.secondary} p-4 relative overflow-hidden`}>
+          
+          {/* Enhanced Header */}
+          <motion.div 
+            className="flex justify-between items-center mb-6 bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/30"
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">{selectedAvatar?.emoji || '👧🏽'}</div>
+              <div>
+                <div className="text-3xl font-bold">🏗️ Block Builder</div>
+                <div className="text-lg text-gray-600">{selectedAvatar?.name || 'Emmy'}'s Workshop</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                <Star className="inline w-5 h-5 mr-2" />
+                {score.toLocaleString()}
+              </div>
+              <div className="bg-gradient-to-r from-purple-400 to-pink-500 px-6 py-3 rounded-2xl text-white font-bold shadow-lg">
+                🏗️ {project}
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Building Grid */}
+            <div className="lg:col-span-3">
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+              >
+                <div className="grid grid-cols-16 gap-1 max-w-2xl mx-auto">
+                  {grid.map((row, rowIndex) =>
+                    row.map((cell, colIndex) => (
+                      <motion.div
+                        key={`${rowIndex}-${colIndex}`}
+                        className={`
+                          aspect-square rounded border cursor-pointer transition-all relative overflow-hidden
+                          ${cell.block 
+                            ? 'bg-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                            : showGrid 
+                              ? 'bg-gray-100 border-gray-300 hover:bg-gray-200' 
+                              : 'bg-transparent'
+                          }
+                          ${mode === 'destroy' ? 'hover:bg-red-200' : 
+                            mode === 'paint' ? 'hover:bg-blue-200' : 'hover:bg-green-200'}
+                        `}
+                        style={{
+                          transform: `translateY(-${cell.elevation * 2}px)`,
+                          zIndex: cell.elevation + 1
+                        }}
+                        onClick={() => handleCellClick(rowIndex, colIndex)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={cell.block ? {
+                          boxShadow: cell.elevation > 0 ? 
+                            `0 ${cell.elevation * 4}px ${cell.elevation * 8}px rgba(0,0,0,0.3)` : 
+                            "0 2px 4px rgba(0,0,0,0.1)"
+                        } : {}}
+                      >
+                        {cell.block && (
+                          <div className="w-full h-full flex items-center justify-center text-xs sm:text-sm lg:text-base">
+                            {cell.block}
+                          </div>
+                        )}
+                        {cell.elevation > 0 && (
+                          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                            {cell.elevation}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+
+                {/* Grid Controls */}
+                <div className="flex justify-center mt-4 gap-2">
+                  <motion.button
+                    onClick={() => setShowGrid(!showGrid)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-xl font-bold hover:bg-gray-600 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {showGrid ? '🔲 Hide Grid' : '⬜ Show Grid'}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setBuildingGuide(!buildingGuide)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {buildingGuide ? '📖 Hide Guide' : '💡 Show Guide'}
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Controls Panel */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Mode Selection */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">🛠️ Build Mode</h3>
+                <div className="space-y-3">
+                  {[
+                    { mode: 'build', icon: '🔨', label: 'Build', color: 'from-green-500 to-emerald-600' },
+                    { mode: 'destroy', icon: '💥', label: 'Destroy', color: 'from-red-500 to-pink-600' },
+                    { mode: 'paint', icon: '🎨', label: 'Paint', color: 'from-blue-500 to-indigo-600' }
+                  ].map(({ mode: modeType, icon, label, color }) => (
+                    <motion.button
+                      key={modeType}
+                      onClick={() => setMode(modeType)}
+                      className={`w-full p-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${
+                        mode === modeType 
+                          ? `bg-gradient-to-r ${color} text-white scale-105 shadow-xl` 
+                          : 'bg-white/50 hover:bg-white/70 shadow-lg hover:shadow-xl'
+                      }`}
+                      whileHover={{ scale: mode === modeType ? 1.05 : 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="text-2xl">{icon}</span>
+                      <span>{label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Block Inventory */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">📦 Blocks</h3>
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {blocks.map(block => (
+                    <motion.button
+                      key={block}
+                      onClick={() => setSelectedBlock(block)}
+                      className={`w-full p-4 rounded-2xl font-bold transition-all flex items-center justify-between ${
+                        selectedBlock === block 
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white scale-105 shadow-xl' 
+                          : 'bg-white/50 hover:bg-white/70 shadow-lg hover:shadow-xl'
+                      }`}
+                      whileHover={{ scale: selectedBlock === block ? 1.05 : 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{block}</span>
+                        <span className="text-lg">{block === blocks[0] ? 'Stone' : block === blocks[1] ? 'Wood' : block === blocks[2] ? 'Brick' : 'Special'}</span>
+                      </div>
+                      <span className="bg-white/20 px-3 py-1 rounded-full text-lg font-bold">{inventory[block]}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Project Templates */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-center">🏗️ Projects</h3>
+                <div className="space-y-3">
+                  <select 
+                    value={project}
+                    onChange={(e) => setProject(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-white/70 border border-white/50 font-bold"
+                  >
+                    {Object.entries(projectTemplates).map(([key, template]) => (
+                      <option key={key} value={key}>{template.name}</option>
+                    ))}
+                  </select>
+                  
+                  {buildingGuide && (
+                    <motion.div
+                      className="bg-blue-100 p-4 rounded-xl"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                    >
+                      <h4 className="font-bold text-blue-800 mb-2">Building Guide:</h4>
+                      <p className="text-blue-700 text-sm">{projectTemplates[project]?.description}</p>
+                    </motion.div>
+                  )}
+                  
+                  <motion.button
+                    onClick={autoBuildProject}
+                    className="w-full p-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ✨ Auto Build
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Actions */}
+              <motion.div 
+                className="bg-white/30 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/50"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={saveProject}
+                    className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    💾 Save Creation
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={clearAll}
+                    className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-bold hover:from-red-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🗑️ Clear All
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => onGameEnd('save', { score, grid, projects: savedProjects, avatar: selectedAvatar })}
+                    className="w-full p-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🏠 Return to Hub
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Particle Effects */}
+          <AnimatePresence>
+            {particles.map(particle => (
+              <motion.div
+                key={particle.id}
+                className="absolute pointer-events-none text-2xl z-20"
+                style={{ 
+                  left: `${particle.x}%`, 
+                  top: `${particle.y}%`,
+                  transform: `rotate(${particle.rotation}deg)`
+                }}
+                initial={{ opacity: 1, scale: particle.scale }}
+                animate={{ 
+                  opacity: 0, 
+                  scale: particle.scale * 2,
+                  x: particle.velocityX,
+                  y: particle.velocityY,
+                  rotate: particle.rotation + 360
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5 }}
+              >
+                {particle.type === 'build' && '✨'}
+                {particle.block === '💥' && '💥'}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Instructions */}
+          <motion.div 
+            className="text-center mt-6 relative z-10"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <p className="text-xl font-bold text-white mb-2">🏗️ Click on grid cells to build! Use different modes to create amazing structures! 🎨</p>
+            <p className="text-lg text-gray-200">Stack blocks to create 3D structures! Save your creations to share with family! 💝</p>
+          </motion.div>
+        </div>
+      );
+    };
+
+    const handleGameEnd = (result, data) => {
     setPlayerStats(prev => ({
       ...prev,
       gamesPlayed: prev.gamesPlayed + 1,
